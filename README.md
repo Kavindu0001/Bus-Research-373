@@ -1,216 +1,180 @@
-# Bus-Research-373
+# 25-26J-373
 
-**Development of an IoT-Based Smart Bus System with Machine Learning-Powered Enhancements for Owner Awareness**
+# SmartBusAI: IoT-Based Smart Bus System with Machine Learning-Powered Owner Awareness
 
-## Abstract
+## 👥 Team Members
 
-Income leakage, unsafe driving behavior, and lack of operational transparency are major challenges in Sri Lanka’s private bus transportation system. This research develops a Smart Bus Monitoring and Analytics Platform combining IoT sensing, privacy-preserving computer vision, and machine learning to provide reliable passenger monitoring, anomaly detection, revenue reconciliation, profit forecasting, and driver safety alerts. The platform is designed for reproducible research and field pilots.
-
----
-
-## System Overview
-
-The system comprises four integrated components developed by individual contributors and united through a secure backend and a canonical data model. Key capabilities include resilient edge logging, embedding-based visual analytics (no raw image retention), ML-based forecasting, and safety monitoring.
-
-### Core Objectives
-
-- Prevent income leakage through automated passenger counting and appearance anomaly detection
-- Provide profit and demand prediction using historical and real-time data
-- Detect unsafe driver behavior and alcohol usage
-- Guarantee zero data loss under intermittent connectivity with SD-backed local persistence
-- Provide real-time dashboards and audit trails for owners and authorities
+### Group Leader: Sandev Jayaweera – GAN & Computer Vision  
+### Member 1: Sanduni – Profit Prediction (ML)  
+### Member 2: Jaladhi – Driver Alcohol Detection  
+### Member 3: Nandun – ESP32 IoT & Revenue Collection  
 
 ---
 
-## Professional architecture diagram
+## Overview
 
-<img src="docs/architecture.svg" alt="Architecture diagram" width="900" />
+**SmartBusAI** is an IoT-enabled, machine-learning powered decision support platform designed to eliminate revenue leakage, improve safety, and optimize profitability in Sri Lanka’s private bus transportation system.  
 
-Below is a reusable diagram expressed as a Mermaid block (copy to a Mermaid-capable renderer or export to SVG/PNG for presentations):
-
-```mermaid
-flowchart LR
-  subgraph Edge [Edge / Vehicle]
-    A1[ESP32 Controller\n- Camera & sensors]
-    A2[Camera Module]
-    A3[GPS Module]
-    A4[Alcohol Sensor]
-    A5[SD Card (Local Store)]
-    A6[Edge ML (on-device)]
-    A1 --> A2
-    A1 --> A3
-    A1 --> A4
-    A1 --> A5
-    A1 --> A6
-  end
-
-  subgraph Ingestion [Secure Ingestion]
-    B1[MQTT / HTTPS Gateway\n- TLS + Token Auth]
-    B2[Preprocessing & Validation]
-    B1 --> B2
-  end
-
-  subgraph Backend [Backend Services]
-    C1[Ingestion API]
-    C2[Feature Store & Queue]
-    C3[ML Inference Services]
-    C4[Business Logic & Recon]
-    C5[API Server & Webhooks]
-    C6[Auth & Token Service]
-    C1 --> C2
-    C2 --> C3
-    C3 --> C4
-    C4 --> C5
-    C5 --> C6
-  end
-
-  subgraph Storage [Data & Models]
-    D1[MongoDB\n(canonical collections)]
-    D2[Object Store\n(models/embeddings)]
-    D3[Model Registry]
-    D1 -.-> D2
-    D2 --> D3
-  end
-
-  subgraph UI [Dashboard & Ops]
-    E1[Web Dashboard]
-    E2[Alerting (SMS/Email)]
-    E3[Monitoring & Logs]
-  end
-
-  A5 -->|Batched Uploads| B1
-  B2 --> C1
-  C4 --> D1
-  C3 --> D2
-  C3 --> C4
-  C4 --> E1
-  C4 --> E2
-  C4 --> E3
-  C6 --> B1
-  classDef infra fill:#E8F0FE,stroke:#2B6CB0,stroke-width:1px;
-  class Edge,Ingestion,Backend,Storage,UI infra;
-```
-
-Exported vector diagram: `docs/architecture.svg` (added to the repo).
+The system integrates **AI vision, sensor-based IoT, GPS tracking, and predictive analytics** to provide **real-time passenger tracking, anomaly detection, revenue validation, profit forecasting, and driver safety monitoring**.
 
 ---
 
-## Research Components
+## Problem Statement
 
-### 1. Passenger Appearance Anomaly Detection (GAN-Based)
+Sri Lanka’s private bus industry suffers from:
 
-**Contributor:** Sandev Jayaweera
+- Manual ticketing and under-reported income  
+- Passenger fraud and repeated boarding  
+- Unsafe driver behavior  
+- No reliable method to verify trip-wise earnings  
+- Poor operational planning  
 
-- Notebook: `gan-for-passenger-appearance-anomaly-detection.ipynb`
-- Learns distribution of normal boarding appearances using GANs (or VAE alternatives) on deep embeddings.
-- Anomaly scoring via reconstruction error and discriminator outputs; stores embeddings and scores (no raw images).
-
-**Tech stack:** TensorFlow / Keras, OpenCV, embedding extractors.
-
-### 2. Bus Travel Profit Prediction Using Machine Learning
-
-**Contributor:** Sanduni
-
-- Notebook: `bus-travel-profit-prediction-using-ml.ipynb`
-- Performs feature engineering from journey logs, ticketing, and temporal covariates; evaluates regressors and ensembles for route-level and time-series forecasting.
-
-**Tech stack:** Scikit-learn, Pandas, NumPy, XGBoost/LightGBM for baselines.
-
-### 3. Driver Alcohol Level Detection
-
-**Contributor:** Jaladhi
-
-- Notebook: `alcohol-level-detection.ipynb`
-- Processes raw sensor readings and uses calibrated ML classifiers and threshold policies to produce actionable alerts.
-
-**Tech stack:** Sensor integration libraries, scikit-learn, lightweight on-device heuristics.
-
-### 4. IoT Data Collection & Revenue Processing (Edge)
-
-**Contributor:** Nandun
-
-My part of the research focuses on the IoT data collection and revenue processing system. I use an ESP32 microcontroller as the primary controller to manage passenger event data and communicate with the backend server. A GPS module captures precise location and timestamps for passenger get-in and get-out events. To handle low or no network coverage, an SD card module stores all events and location data locally; when connectivity is restored the stored data is automatically uploaded to the backend, ensuring no trip or revenue data is lost. The backend processes collected records to calculate trip-wise and date-wise revenue, which owners can view through a simple web interface.
-
-**Tech stack:** ESP32 (Arduino/ESP-IDF), GPS modules, SD card logging, secure HTTPS/MQTT clients.
+Bus owners depend on conductors and drivers for revenue reporting, which leads to **income leakage and lack of transparency**.
 
 ---
 
-## Data Model (MongoDB canonical collections)
+## Purpose
 
-- `passenger_embeddings`: { _id, journey_id, bus_id, ts, embedding, recon_error, discriminator_score, embedding_hash }
-- `journeys`: { _id, bus_id, route_id, start_ts, end_ts, ticket_count, reconciled_revenue }
-- `gps_logs`: { journey_id, ts, lat, lon, speed }
-- `revenue_records`: { journey_id, ticket_count, computed_revenue, reported_revenue, reconciliation_status }
-- `alcohol_alerts`: { journey_id, driver_id, ts, sensor_value, model_score, alert_sent }
-- `anomaly_events`: { journey_id, ts, anomaly_type, score, evidence_ref }
-- `system_logs`: { ts, device_id, event_type, message }
+SmartBusAI aims to:
 
-For production, define JSON Schemas and indexes in `data/schema.md`, including TTL indexes for ephemeral logs and shard keys for `passenger_embeddings`.
+- 🚍 Automatically count passengers using AI and IoT  
+- 💰 Verify real revenue per trip  
+- 📊 Predict profits and demand  
+- 🍺 Detect alcohol-impaired driving  
+- 📡 Guarantee zero data loss using SD-based buffering  
+- 🖥 Provide a real-time dashboard for owners  
 
 ---
 
-## Deployment & Development (Quickstart)
+## System Overview Diagram
 
-Prereqs: Python 3.10+, pip, Node.js (for dashboard), Docker (optional), MongoDB instance.
+                     |
+                     v
+                     |
+                     v
 
-Development setup:
+---
+
+## Components
+
+### 👤 GAN-Based Passenger Anomaly Detection (Sandev)
+
+✔ Learns **normal passenger appearance patterns**  
+✔ Uses **GAN + deep embeddings** instead of storing images  
+✔ Detects:
+- Repeated passengers  
+- Fare evasion  
+- Suspicious behavior  
+
+✔ Privacy-preserving visual intelligence  
+
+---
+
+### 💰 Bus Travel Profit Prediction (Sanduni)
+
+✔ Predicts:
+- Route-wise revenue  
+- Time-based demand  
+- Profit trends  
+
+✔ Uses ML on historical passenger and journey data  
+✔ Supports route planning and scheduling  
+
+---
+
+### 🍺 Driver Alcohol Detection (Jaladhi)
+
+✔ Uses sensor-based ML classification  
+✔ Detects unsafe alcohol levels  
+✔ Sends alerts to bus owners and authorities  
+
+---
+
+### 📡 IoT Passenger Event & Revenue Collection (Nandun)
+
+✔ ESP32 microcontroller as core controller  
+✔ GPS records boarding & exit location + time  
+✔ SD card stores data when internet fails  
+✔ Auto-syncs when network returns  
+✔ Guarantees **100% trip & revenue integrity**  
+
+✔ Provides:
+- Trip-wise revenue  
+- Daily earnings  
+- Ground truth for ML models  
+
+---
+
+## Dependencies
+
+### Edge & Hardware
+- ESP32
+- GPS Module
+- Alcohol Sensor
+- Camera
+- SD Card Module
+
+### Backend
+- Flask (Python)
+- REST APIs
+- SocketIO
+
+### Database
+- MongoDB
+
+### Machine Learning
+- TensorFlow / Keras
+- Scikit-learn
+- OpenCV
+- Pandas, NumPy
+
+---
+
+## Expected Outcomes
+
+- Passenger counting accuracy: **90–95%**  
+- Fraud/anomaly detection: **High precision using GANs**  
+- Revenue accuracy: **Near-100% (IoT-verified)**  
+- Alcohol detection accuracy: **>90%**  
+- Profit prediction accuracy: **75–85%**
+
+---
+
+## Social & Economic Impact
+
+- Eliminates income leakage  
+- Protects passengers from unsafe drivers  
+- Increases profitability for bus owners  
+- Supports digital transformation of Sri Lanka’s transport sector  
+
+---
+
+## Key Technologies Used
+
+| Category | Tools |
+|--------|------|
+| Computer Vision | OpenCV, GANs |
+| Machine Learning | TensorFlow, Scikit-learn |
+| IoT | ESP32, GPS, Sensors |
+| Backend | Flask, Python |
+| Database | MongoDB |
+| Data Handling | Pandas, NumPy |
+| Version Control | GitHub |
+
+---
+
+## Ethical & Data Considerations
+
+- No raw passenger images stored  
+- Only anonymized embeddings saved  
+- GPS & revenue encrypted  
+- Complies with SLIIT research ethics  
+
+---
+
+## How to Run (Development)
 
 ```bash
-python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-```
-
-Run backend locally:
-
-```bash
-
-export MONGO_URI="mongodb://localhost:27017/bus_research"
 python app.py
-```
-
-Edge flashing (ESP32): follow `edge/README.md` (or `edge/firmware/` instructions) to flash and configure device tokens. Ensure `edge/config.example.json` is used to set device IDs and server endpoints.
-
----
-
-## Privacy, Security & Ethics
-
-- Do not store raw camera frames. Persist embeddings only and rotate any identification hashes regularly.
-- All device↔server traffic must be TLS-encrypted and authenticated with rotating tokens.
-- Use field-level encryption for PII in MongoDB and RBAC for dashboard access.
-- Include opt-out and data-retention policies to comply with local regulations.
-
----
-
-## Contributors & Individual Contribution Summary
-
-- **Sandev Jayaweera** — Passenger appearance anomaly detection research (GAN architectures, embedding pipeline, experiments).
-- **Sanduni** — Revenue and demand forecasting (feature engineering, model baselines, evaluation).
-- **Jaladhi** — Driver alcohol detection (sensor integration, model training, alert policies).
-- **Nandun** — Edge systems and IoT data collection (ESP32 firmware, GPS & SD logging, reliable upload & revenue reconciliation).
-
-If you contributed and want your institutional contact or ORCID listed, add details to the `AUTHORS.md` file.
-
----
-
-## Reproducibility & Experiments
-
-- Save dataset splits under `data/splits/` and model checkpoints under `models/` with metadata files describing seeds and environment.
-- Store experiment logs and metrics in `experiments/` for traceability; link each entry to the commit hash that generated it.
-
----
-
-## Next steps (recommended for a pilot)
-
-1. Sanitize and prepare a representative dataset; populate `data/` with anonymized records.
-2. Create `data/schema.md` and `edge/README.md` if missing.
-3. Export the Mermaid diagram as `docs/architecture.svg` and commit it for presentations.
-
----
-
-## License
-
-This repository is for academic research and pilot deployments. Add a LICENSE file (MIT or Apache-2.0 recommended) before commercial or production use.
-
-
-
