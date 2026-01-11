@@ -48,10 +48,52 @@ SmartBusAI aims to:
 
 ## System Overview Diagram
 
-                     |
-                     v
-                     |
-                     v
+                  +-----------------------+     +------------------------+
+|   In-Bus Sensors      |     |      Camera Units      |
+|-----------------------|     |------------------------|
+| - GPS Module          |     | - Passenger Camera     |
+| - Alcohol Sensor     |     | - Driver Camera        |
+| - IR / Entry Sensors |     +-----------+------------+
++-----------+-----------+                 |
+            |                             |
+            v                             v
++----------------------------------------------------+
+|          Edge Layer – ESP32 Controller             |
+|----------------------------------------------------|
+| - Passenger event detection                        |
+| - GPS tagging                                      |
+| - Local SD-card storage                            |
+| - Data synchronization                             |
++----------------------+-----------------------------+
+                       |
+                       v
++----------------------------------------------------+
+|              Backend Server (Flask)                |
+|----------------------------------------------------|
+| - GAN anomaly detection                            |
+| - Profit prediction ML                             |
+| - Alcohol detection logic                          |
+| - API & authentication                             |
++----------------------+-----------------------------+
+                       |
+                       v
++----------------------------------------------------+
+|                   MongoDB                          |
+|----------------------------------------------------|
+| - Passenger embeddings                             |
+| - GPS & trip logs                                  |
+| - Revenue records                                  |
+| - Alerts & anomalies                               |
++----------------------+-----------------------------+
+                       |
+                       v
++----------------------------------------------------+
+|            Web Dashboard for Bus Owners            |
+|----------------------------------------------------|
+| - Live monitoring                                  |
+| - Revenue reports                                  |
+| - Alerts & analytics                               |
++----------------------------------------------------+
 
 ---
 
@@ -132,7 +174,7 @@ SmartBusAI aims to:
 
 ## Expected Outcomes
 
-- Passenger counting accuracy: **90–95%**  
+- Passenger identification accuracy: **80+%**  
 - Fraud/anomaly detection: **High precision using GANs**  
 - Revenue accuracy: **Near-100% (IoT-verified)**  
 - Alcohol detection accuracy: **>90%**  
