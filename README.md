@@ -38,9 +38,11 @@ The system combines edge-level IoT data collection, AI-based vision and learning
 
 ---
 
-## **High-Level System Architecture** 🏗️
+## System Architecture 🏗️
 
-![Smart Bus System Architecture](docs/Overall-Diagram.png)
+Here is the overall system architecture diagram for the project:
+
+![Overall System Diagram](docs/Overall%20Diagram.png)
 
 **Description:**  
 
