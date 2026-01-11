@@ -1,71 +1,140 @@
 # Bus-Research-373
 
-**Development of an IoT-Based Smart Bus System with Machine Learning Enhancements for Operational Transparency and Owner Awareness**
+**Development of an IoT-Based Smart Bus System with Machine Learning-Powered Enhancements for Owner Awareness**
 
-## Executive summary
+## Abstract
 
-This project delivers a production-ready design and prototype implementation for a Smart Bus Monitoring and Analytics Platform that addresses revenue leakage, unsafe driving, and operational opacity in private bus fleets. The system combines resilient edge data collection (ESP32 + sensors), privacy-preserving computer vision (feature embeddings, no raw images), server-side AI analytics (GAN-based anomaly detection, revenue forecasting), and a secure backend for storage and dashboards. The repository contains research notebooks, dataset schemas, and deployment guidance for reproducible evaluation and real-world pilot deployment.
+Income leakage, unsafe driving behavior, and lack of operational transparency are major challenges in Sri Lanka’s private bus transportation system. This research develops a Smart Bus Monitoring and Analytics Platform combining IoT sensing, privacy-preserving computer vision, and machine learning to provide reliable passenger monitoring, anomaly detection, revenue reconciliation, profit forecasting, and driver safety alerts. The platform is designed for reproducible research and field pilots.
 
-## Key contributions
+---
 
-- A GAN-based passenger appearance anomaly detection pipeline that operates on deep embeddings (privacy-preserving).
-- A route- and time-aware revenue and profit forecasting component using tabular ML models.
-- An alcohol-detection module for driver safety using on-device sensors and ML classification.
-- A fault-tolerant ESP32-edge data collection architecture that guarantees eventual consistency (local SD persistence and batched uploads).
-- Comprehensive data schemas, evaluation protocols, and deployment guidance for field pilots.
+## System Overview
 
-## Research impact and novelty
+The system comprises four integrated components developed by individual contributors and united through a secure backend and a canonical data model. Key capabilities include resilient edge logging, embedding-based visual analytics (no raw image retention), ML-based forecasting, and safety monitoring.
 
-- Introduces a practical, privacy-first approach to passenger anomaly detection by storing only embeddings and reconstruction metrics rather than raw images.
-- Demonstrates integration of edge resilience (SD-backed logging) with cloud ML pipelines to ensure zero data loss under intermittent connectivity.
-- Provides methods and baseline results for both anomaly detection and revenue forecasting suitable for transport operators and researchers.
+### Core Objectives
 
-## Repository contents
+- Prevent income leakage through automated passenger counting and appearance anomaly detection
+- Provide profit and demand prediction using historical and real-time data
+- Detect unsafe driver behavior and alcohol usage
+- Guarantee zero data loss under intermittent connectivity with SD-backed local persistence
+- Provide real-time dashboards and audit trails for owners and authorities
 
-- `gan-for-passenger-appearance-anomaly-detection.ipynb` — research notebook with training, evaluation, and embedding extraction pipeline.
-- `bus-travel-profit-prediction-using-ml.ipynb` — data preprocessing, feature engineering, and forecasting baselines.
-- `alcohol-level-detection.ipynb` — sensor data processing and classification experiments.
-- `edge/` — (recommended) firmware sketches and integration notes for ESP32, GPS, and SD logging.
-- `data/schema.md` — canonical MongoDB collection schemas and example documents.
-- `deploy/` — deployment manifests, Dockerfiles, and helm charts (if applicable).
-- `README.md` — this document.
+---
 
-If some folders are missing, see the Notebooks above for experimental code and the `data/schema.md` for required collection designs.
+## Professional architecture diagram
 
-## System architecture (high level)
+Below is a reusable diagram expressed as a Mermaid block (copy to a Mermaid-capable renderer or export to SVG/PNG for presentations):
 
-1. Edge devices (ESP32) collect sensor data: camera frame embeddings, GPS timestamps, SD-backed logs, and alcohol sensor readings.
-2. Edge batches and signs payloads; when network is available, data is uploaded to the backend via a secure API (TLS + token auth).
-3. Backend ingests events into MongoDB (collections listed below) and forwards features to ML services for inference and storage of anomaly/revenue events.
-4. Dashboards and alerting services surface anomalies, revenue reconciliations, and driver safety alerts to owners.
+```mermaid
+flowchart LR
+	subgraph Edge[Edge / Vehicle]
+		A1[ESP32 Controller]\n- camera & sensors
+		A2[Camera Module]\n    A3[GPS Module]\n    A4[Alcohol Sensor]\n    A5[SD Card (Local Store)]
+		A1 --> A2
+		A1 --> A3
+		A1 --> A4
+		A1 --> A5
+	end
 
-## Data model
+	subgraph Ingestion[Secure Ingestion]
+		B1[MQTT / HTTPS Gateway]\n- TLS + Token Auth
+		B2[Preprocessing & Validation]
+		B1 --> B2
+	end
 
-Primary MongoDB collections (canonical fields):
+	subgraph Backend[Backend Services]
+		C1[Ingestion API]\n    C2[Feature Store & Queue]\n    C3[ML Inference Services]\n    C4[Business Logic & Recon]
+		C1 --> C2
+		C2 --> C3
+		C3 --> C4
+	end
 
-- `passenger_embeddings`: { _id, journey_id, timestamp, embedding: [float32], recon_error, discriminator_score, embedding_hash }
-- `journeys`: { _id, bus_id, route_id, start_ts, end_ts, gps_summary }
+	subgraph Storage[Data Layer]
+		D1[MongoDB]
+		D2[Object Store (models/embeddings)]
+		D1 -.-> D2
+	end
+
+	subgraph UI[Dashboard & Alerts]
+		E1[Web Dashboard]
+		E2[Alerting / SMS / Email]
+	end
+
+	A5 -->|Batched Uploads| B1
+	B2 --> C1
+	C4 --> D1
+	C3 --> D2
+	C4 --> E1
+	C4 --> E2
+
+	classDef infra fill:#f9f,stroke:#333,stroke-width:1px;
+	class Edge,Ingestion,Backend,Storage,UI infra;
+```
+
+If you prefer a PNG/SVG export, I can generate and add `docs/architecture.svg`.
+
+---
+
+## Research Components
+
+### 1. Passenger Appearance Anomaly Detection (GAN-Based)
+
+**Contributor:** Sandev Jayaweera
+
+- Notebook: `gan-for-passenger-appearance-anomaly-detection.ipynb`
+- Learns distribution of normal boarding appearances using GANs (or VAE alternatives) on deep embeddings.
+- Anomaly scoring via reconstruction error and discriminator outputs; stores embeddings and scores (no raw images).
+
+**Tech stack:** TensorFlow / Keras, OpenCV, embedding extractors.
+
+### 2. Bus Travel Profit Prediction Using Machine Learning
+
+**Contributor:** Sanduni
+
+- Notebook: `bus-travel-profit-prediction-using-ml.ipynb`
+- Performs feature engineering from journey logs, ticketing, and temporal covariates; evaluates regressors and ensembles for route-level and time-series forecasting.
+
+**Tech stack:** Scikit-learn, Pandas, NumPy, XGBoost/LightGBM for baselines.
+
+### 3. Driver Alcohol Level Detection
+
+**Contributor:** Jaladhi
+
+- Notebook: `alcohol-level-detection.ipynb`
+- Processes raw sensor readings and uses calibrated ML classifiers and threshold policies to produce actionable alerts.
+
+**Tech stack:** Sensor integration libraries, scikit-learn, lightweight on-device heuristics.
+
+### 4. IoT Data Collection & Revenue Processing (Edge)
+
+**Contributor:** Nandun
+
+My part of the research focuses on the IoT data collection and revenue processing system. I use an ESP32 microcontroller as the primary controller to manage passenger event data and communicate with the backend server. A GPS module captures precise location and timestamps for passenger get-in and get-out events. To handle low or no network coverage, an SD card module stores all events and location data locally; when connectivity is restored the stored data is automatically uploaded to the backend, ensuring no trip or revenue data is lost. The backend processes collected records to calculate trip-wise and date-wise revenue, which owners can view through a simple web interface.
+
+**Tech stack:** ESP32 (Arduino/ESP-IDF), GPS modules, SD card logging, secure HTTPS/MQTT clients.
+
+---
+
+## Data Model (MongoDB canonical collections)
+
+- `passenger_embeddings`: { _id, journey_id, bus_id, ts, embedding, recon_error, discriminator_score, embedding_hash }
+- `journeys`: { _id, bus_id, route_id, start_ts, end_ts, ticket_count, reconciled_revenue }
 - `gps_logs`: { journey_id, ts, lat, lon, speed }
 - `revenue_records`: { journey_id, ticket_count, computed_revenue, reported_revenue, reconciliation_status }
 - `alcohol_alerts`: { journey_id, driver_id, ts, sensor_value, model_score, alert_sent }
 - `anomaly_events`: { journey_id, ts, anomaly_type, score, evidence_ref }
 - `system_logs`: { ts, device_id, event_type, message }
 
-See `data/schema.md` for JSON Schema definitions and indexes (sharding/TTL recommendations).
+For production, define JSON Schemas and indexes in `data/schema.md`, including TTL indexes for ephemeral logs and shard keys for `passenger_embeddings`.
 
-## Methodology and evaluation
+---
 
-- Passenger Anomaly Detection: train a GAN (or VAE) on embeddings of 'normal' boarding frames. Use reconstruction error + discriminator confidence to score anomalies. Evaluate with precision/recall, AUROC, and event-level F1 on curated test sets (synthetic repeat boarding, occlusion, and fare-evasion scenarios).
-- Revenue Forecasting: compare baselines (linear regression, RandomForest, XGBoost) using RMSE, MAE, and quantile coverage for demand prediction. Run cross-validation by route and day-of-week folds to avoid temporal leakage.
-- Alcohol Detection: evaluate accuracy, precision/recall, and ROC; calibrate thresholds for alert policies to trade off false positives and operational risk.
+## Deployment & Development (Quickstart)
 
-Reproducibility notes: all experiments include seed control, dataset splits saved to `data/splits/`, and model checkpoints saved to `models/`.
+Prereqs: Python 3.10+, pip, Node.js (for dashboard), Docker (optional), MongoDB instance.
 
-## Getting started — development and reproduction
-
-Prerequisites: Python 3.10+, pip, Docker (optional), and a MongoDB instance (local or remote).
-
-Quick setup (development):
+Development setup:
 
 ```bash
 python -m venv .venv
@@ -73,69 +142,56 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Run the GAN notebook locally in Jupyter or use `nbscripts/run_gan.py` (if provided) to reproduce training with the default config:
+Run backend locally:
 
 ```bash
-jupyter lab
-# or run training script
-python nbscripts/run_gan.py --config configs/gan_default.yaml
+
+export MONGO_URI="mongodb://localhost:27017/bus_research"
+python app.py
 ```
 
-Deployment (edge + backend) notes:
-
-- Edge: flash ESP32 firmware from `edge/firmware/` and configure device tokens in `edge/config.example.json`.
-- Backend: provided Dockerfile builds a container exposing the ingestion API. Use `deploy/docker-compose.yml` for single-host pilots.
-
-## Security, privacy, and ethics
-
-- No raw images are persisted; only numeric embeddings and compact audit trails are stored.
-- All network traffic must use TLS; device tokens must be rotated periodically.
-- GPS and revenue data are sensitive: use field-level encryption in MongoDB for PII, and restrict dashboard access via RBAC.
-- The system design includes differential access controls and an opt-out mechanism where required by local regulation.
-
-## Performance and scalability guidance
-
-- Shard `passenger_embeddings` by `bus_id` or `route_id` for high-volume deployments.
-- Use a GPU-enabled inference service for embedding extraction at scale; for small pilots, on-device embedding extraction is supported.
-- Batch ingestion and idempotency keys prevent duplicate records after intermittent uploads.
-
-## Evaluation baseline results (example)
-
-- Passenger-anomaly AUROC: 0.92 (validation set)
-- Revenue-forecast RMSE: route-level 45.7 LKR
-- Alcohol-detection accuracy: 0.88 (threshold tuned)
-
-Include exact experiment logs and seeds in `experiments/` for traceability.
-
-## Maintenance, monitoring, and alerting
-
-- Operational metrics: ingestion latency, upload success rate, embedding queue depth, model inference latency.
-- Recommended alerts: data-starvation (no uploads for X hours), spike in anomaly rates, device offline > 24h.
-
-## How to contribute
-
-- Fork the repository and open PRs to `member-sandev` branch.
-- Add unit tests for new components and update `data/schema.md` when changing collection shapes.
-- Label issues with `infra`, `model`, or `edge` to triage work.
-
-## Authors and contacts
-
-- Sandev Jayaweera — Passenger anomaly detection. Email: (add institutional contact).
-- Sanduni — Revenue forecasting.
-- Jaladhi — Alcohol detection.
-- Nandun — Edge systems and firmware.
-
-## Licensing and citations
-
-- This repository is provided for research and pilot deployments. Add a LICENSE file with your preferred license (e.g., MIT or Apache-2.0) before production use.
-- Cite this work: (provide formal citation when available).
-
-## Next steps (for a pilot)
-
-1. Prepare sample dataset and populate `data/` with sanitized records.
-2. Run notebooks to reproduce baseline results and save artifacts to `experiments/`.
-3. Deploy a single-bus pilot with one ESP32 and monitor ingestion and anomaly rates for 2 weeks.
+Edge flashing (ESP32): follow `edge/README.md` (or `edge/firmware/` instructions) to flash and configure device tokens. Ensure `edge/config.example.json` is used to set device IDs and server endpoints.
 
 ---
+
+## Privacy, Security & Ethics
+
+- Do not store raw camera frames. Persist embeddings only and rotate any identification hashes regularly.
+- All device↔server traffic must be TLS-encrypted and authenticated with rotating tokens.
+- Use field-level encryption for PII in MongoDB and RBAC for dashboard access.
+- Include opt-out and data-retention policies to comply with local regulations.
+
+---
+
+## Contributors & Individual Contribution Summary
+
+- **Sandev Jayaweera** — Passenger appearance anomaly detection research (GAN architectures, embedding pipeline, experiments).
+- **Sanduni** — Revenue and demand forecasting (feature engineering, model baselines, evaluation).
+- **Jaladhi** — Driver alcohol detection (sensor integration, model training, alert policies).
+- **Nandun** — Edge systems and IoT data collection (ESP32 firmware, GPS & SD logging, reliable upload & revenue reconciliation).
+
+If you contributed and want your institutional contact or ORCID listed, add details to the `AUTHORS.md` file.
+
+---
+
+## Reproducibility & Experiments
+
+- Save dataset splits under `data/splits/` and model checkpoints under `models/` with metadata files describing seeds and environment.
+- Store experiment logs and metrics in `experiments/` for traceability; link each entry to the commit hash that generated it.
+
+---
+
+## Next steps (recommended for a pilot)
+
+1. Sanitize and prepare a representative dataset; populate `data/` with anonymized records.
+2. Create `data/schema.md` and `edge/README.md` if missing.
+3. Export the Mermaid diagram as `docs/architecture.svg` and commit it for presentations.
+
+---
+
+## License
+
+This repository is for academic research and pilot deployments. Add a LICENSE file (MIT or Apache-2.0 recommended) before commercial or production use.
+
 
 
