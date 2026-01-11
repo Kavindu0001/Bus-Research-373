@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">
+  <style>
+    .box { fill:#E8F0FE; stroke:#2B6CB0; stroke-width:2px; rx:8; }
+    .small { font: 14px "Helvetica", Arial, sans-serif; fill:#0b2240; }
+    .title { font: 20px "Helvetica", Arial, sans-serif; font-weight:700; fill:#0b2240; }
+    .arrow { stroke:#333; stroke-width:2; fill:none; marker-end:url(#arrowhead); }
+    .note { font:12px "Helvetica", Arial, sans-serif; fill:#333; }
+  </style>
+
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#333" />
+    </marker>
+  </defs>
+
+  <text x="40" y="40" class="title">Smart Bus Platform — Architecture</text>
+
+  <!-- Edge / Vehicle -->
+  <rect x="40" y="70" width="420" height="220" class="box" />
+  <text x="60" y="100" class="small">Edge / Vehicle</text>
+  <text x="60" y="130" class="small">ESP32 Controller</text>
+  <text x="220" y="130" class="small">Camera Module</text>
+  <text x="60" y="160" class="small">GPS Module</text>
+  <text x="220" y="160" class="small">Alcohol Sensor</text>
+  <text x="60" y="190" class="small">SD Card (Local Store)</text>
+  <text x="220" y="190" class="small">Edge ML (on-device)</text>
+
+  <!-- Ingestion -->
+  <rect x="520" y="110" width="260" height="140" class="box" />
+  <text x="540" y="140" class="small">Secure Ingestion</text>
+  <text x="540" y="165" class="small">MQTT / HTTPS Gateway</text>
+  <text x="540" y="185" class="small">Preprocessing & Validation</text>
+
+  <!-- Backend services -->
+  <rect x="820" y="40" width="320" height="320" class="box" />
+  <text x="840" y="70" class="small">Backend Services</text>
+  <text x="840" y="100" class="small">Ingestion API</text>
+  <text x="840" y="125" class="small">Feature Store & Queue</text>
+  <text x="840" y="150" class="small">ML Inference Services</text>
+  <text x="840" y="175" class="small">Business Logic & Recon</text>
+  <text x="840" y="200" class="small">API Server & Webhooks</text>
+  <text x="840" y="225" class="small">Auth & Token Service</text>
+
+  <!-- Data & Models -->
+  <rect x="220" y="320" width="360" height="150" class="box" />
+  <text x="240" y="350" class="small">Data & Models</text>
+  <text x="240" y="375" class="small">MongoDB (canonical collections)</text>
+  <text x="240" y="400" class="small">Object Store (models / embeddings)</text>
+  <text x="240" y="425" class="small">Model Registry</text>
+
+  <!-- UI -->
+  <rect x="820" y="380" width="320" height="140" class="box" />
+  <text x="840" y="410" class="small">Dashboard & Ops</text>
+  <text x="840" y="435" class="small">Web Dashboard</text>
+  <text x="840" y="460" class="small">Alerting (SMS / Email)</text>
+  <text x="840" y="485" class="small">Monitoring & Logs</text>
+
+  <!-- Arrows -->
+  <path d="M 380 190 L 520 165" class="arrow" />
+  <path d="M 720 165 L 820 130" class="arrow" />
+  <path d="M 900 220 L 900 320" class="arrow" />
+  <path d="M 740 360 L 580 360" class="arrow" />
+  <path d="M 1020 260 L 1020 380" class="arrow" />
+  <path d="M 1020 450 L 1020 420" class="arrow" />
+
+  <!-- Labels on arrows -->
+  <text x="440" y="150" class="note">Batched Uploads / TLS + Token</text>
+  <text x="760" y="205" class="note">Embeddings / Events</text>
+
+  <!-- Footer note -->
+  <text x="40" y="880" class="note">Diagram generated to reflect the upgraded architecture (vector SVG). Keep `docs/architecture.svg` under version control for presentations and editing.</text>
+</svg>

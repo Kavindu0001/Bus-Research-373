@@ -24,55 +24,74 @@ The system comprises four integrated components developed by individual contribu
 
 ## Professional architecture diagram
 
+<img src="docs/architecture.svg" alt="Architecture diagram" width="900" />
+
 Below is a reusable diagram expressed as a Mermaid block (copy to a Mermaid-capable renderer or export to SVG/PNG for presentations):
 
 ```mermaid
 flowchart LR
-	subgraph Edge[Edge / Vehicle]
-		A1[ESP32 Controller]\n- camera & sensors
-		A2[Camera Module]\n    A3[GPS Module]\n    A4[Alcohol Sensor]\n    A5[SD Card (Local Store)]
-		A1 --> A2
-		A1 --> A3
-		A1 --> A4
-		A1 --> A5
-	end
+  subgraph Edge [Edge / Vehicle]
+    A1[ESP32 Controller\n- Camera & sensors]
+    A2[Camera Module]
+    A3[GPS Module]
+    A4[Alcohol Sensor]
+    A5[SD Card (Local Store)]
+    A6[Edge ML (on-device)]
+    A1 --> A2
+    A1 --> A3
+    A1 --> A4
+    A1 --> A5
+    A1 --> A6
+  end
 
-	subgraph Ingestion[Secure Ingestion]
-		B1[MQTT / HTTPS Gateway]\n- TLS + Token Auth
-		B2[Preprocessing & Validation]
-		B1 --> B2
-	end
+  subgraph Ingestion [Secure Ingestion]
+    B1[MQTT / HTTPS Gateway\n- TLS + Token Auth]
+    B2[Preprocessing & Validation]
+    B1 --> B2
+  end
 
-	subgraph Backend[Backend Services]
-		C1[Ingestion API]\n    C2[Feature Store & Queue]\n    C3[ML Inference Services]\n    C4[Business Logic & Recon]
-		C1 --> C2
-		C2 --> C3
-		C3 --> C4
-	end
+  subgraph Backend [Backend Services]
+    C1[Ingestion API]
+    C2[Feature Store & Queue]
+    C3[ML Inference Services]
+    C4[Business Logic & Recon]
+    C5[API Server & Webhooks]
+    C6[Auth & Token Service]
+    C1 --> C2
+    C2 --> C3
+    C3 --> C4
+    C4 --> C5
+    C5 --> C6
+  end
 
-	subgraph Storage[Data Layer]
-		D1[MongoDB]
-		D2[Object Store (models/embeddings)]
-		D1 -.-> D2
-	end
+  subgraph Storage [Data & Models]
+    D1[MongoDB\n(canonical collections)]
+    D2[Object Store\n(models/embeddings)]
+    D3[Model Registry]
+    D1 -.-> D2
+    D2 --> D3
+  end
 
-	subgraph UI[Dashboard & Alerts]
-		E1[Web Dashboard]
-		E2[Alerting / SMS / Email]
-	end
+  subgraph UI [Dashboard & Ops]
+    E1[Web Dashboard]
+    E2[Alerting (SMS/Email)]
+    E3[Monitoring & Logs]
+  end
 
-	A5 -->|Batched Uploads| B1
-	B2 --> C1
-	C4 --> D1
-	C3 --> D2
-	C4 --> E1
-	C4 --> E2
-
-	classDef infra fill:#f9f,stroke:#333,stroke-width:1px;
-	class Edge,Ingestion,Backend,Storage,UI infra;
+  A5 -->|Batched Uploads| B1
+  B2 --> C1
+  C4 --> D1
+  C3 --> D2
+  C3 --> C4
+  C4 --> E1
+  C4 --> E2
+  C4 --> E3
+  C6 --> B1
+  classDef infra fill:#E8F0FE,stroke:#2B6CB0,stroke-width:1px;
+  class Edge,Ingestion,Backend,Storage,UI infra;
 ```
 
-If you prefer a PNG/SVG export, I can generate and add `docs/architecture.svg`.
+Exported vector diagram: `docs/architecture.svg` (added to the repo).
 
 ---
 
